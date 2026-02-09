@@ -51,6 +51,7 @@ nullaway-annotations = { module = "com.uber.nullaway:nullaway-annotations", vers
 osgi-framework = "org.osgi:org.osgi.framework:1.10.0"
 rhino = "org.mozilla:rhino:1.8.0"
 slf4j-api = "org.slf4j:slf4j-api:2.0.17"
+snakeyaml = "org.yaml:snakeyaml:2.5"
 #noinspection UnusedVersionCatalogEntry
 w3c-css-sac = "org.eclipse.birt.runtime:org.w3c.css.sac:1.3.1.v200903091627"
 #noinspection UnusedVersionCatalogEntry

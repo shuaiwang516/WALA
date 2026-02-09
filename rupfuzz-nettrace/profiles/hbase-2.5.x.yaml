@@ -1,0 +1,25 @@
+id: hbase-2.5.x
+description: HBase IPC and Netty anchor seeds for 2.5-style codebases
+targetPrefixes:
+  - org.apache.hadoop.hbase.ipc
+  - org.apache.hbase.thirdparty.io.netty
+excludePrefixes:
+  - org.apache.hadoop.hbase.util
+sendRules:
+  - ownerPattern: org.apache.hadoop.hbase.ipc.RpcConnection*
+    methodPattern: send*
+    descriptorPattern: '*'
+    reason: hbase-rpc-send
+  - ownerPattern: org.apache.hadoop.hbase.ipc.AbstractRpcClient*
+    methodPattern: call*
+    descriptorPattern: '*'
+    reason: hbase-client-call
+recvRules:
+  - ownerPattern: org.apache.hadoop.hbase.ipc.ServerRpcConnection*
+    methodPattern: process*
+    descriptorPattern: '*'
+    reason: hbase-server-process
+  - ownerPattern: org.apache.hadoop.hbase.ipc.RpcServer*
+    methodPattern: call*
+    descriptorPattern: '*'
+    reason: hbase-rpcserver-call

@@ -1,0 +1,25 @@
+id: hadoop-3.3.x
+description: Hadoop IPC anchor seeds for HDFS and related Hadoop services
+targetPrefixes:
+  - org.apache.hadoop.ipc
+  - org.apache.hadoop.hdfs.protocol
+excludePrefixes:
+  - org.apache.hadoop.io.compress
+sendRules:
+  - ownerPattern: org.apache.hadoop.ipc.Client*
+    methodPattern: call*
+    descriptorPattern: '*'
+    reason: hadoop-client-call
+  - ownerPattern: org.apache.hadoop.ipc.RPC$Invoker*
+    methodPattern: invoke*
+    descriptorPattern: '*'
+    reason: hadoop-rpc-invoke
+recvRules:
+  - ownerPattern: org.apache.hadoop.ipc.Server*
+    methodPattern: call*
+    descriptorPattern: '*'
+    reason: hadoop-server-call
+  - ownerPattern: org.apache.hadoop.ipc.Server$Connection*
+    methodPattern: process*
+    descriptorPattern: '*'
+    reason: hadoop-server-process

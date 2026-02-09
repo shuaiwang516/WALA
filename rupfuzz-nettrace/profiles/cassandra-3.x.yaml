@@ -1,0 +1,25 @@
+id: cassandra-3.x
+description: Cassandra messaging and streaming anchors for 3.x-style codebases
+targetPrefixes:
+  - org.apache.cassandra.net
+  - org.apache.cassandra.streaming
+excludePrefixes:
+  - org.apache.cassandra.utils.btree
+sendRules:
+  - ownerPattern: org.apache.cassandra.net.OutboundConnection*
+    methodPattern: enqueue*
+    descriptorPattern: '*'
+    reason: cassandra-outbound-enqueue
+  - ownerPattern: org.apache.cassandra.net.MessagingService*
+    methodPattern: send*
+    descriptorPattern: '*'
+    reason: cassandra-messaging-send
+recvRules:
+  - ownerPattern: org.apache.cassandra.net.InboundMessageHandler*
+    methodPattern: process*
+    descriptorPattern: '*'
+    reason: cassandra-inbound-process
+  - ownerPattern: org.apache.cassandra.net.Verb*
+    methodPattern: execute*
+    descriptorPattern: '*'
+    reason: cassandra-verb-dispatch

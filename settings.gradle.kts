@@ -40,6 +40,7 @@ include(
     "ide:tests",
     "scandroid",
     "shrike",
+    "rupfuzz-nettrace",
     "util",
 )
 
