@@ -1,0 +1,31 @@
+id: hbase-3.0.0-beta-1
+description: Version-specific hbase profile mined from validation output hbase-3.0.0-beta-1
+targetPrefixes:
+  - org.apache.hadoop.hbase.ipc
+  - org.apache.hbase.thirdparty.io.netty
+sendRules:
+  - ownerPattern: org.apache.hadoop.hbase.ipc.AbstractRpcClient
+    methodPattern: callBlockingMethod
+    descriptorPattern: '(Lorg/apache/hbase/thirdparty/com/google/protobuf/Descriptors$MethodDescriptor;Lorg/apache/hadoop/hbase/ipc/HBaseRpcController;Lorg/apache/hbase/thirdparty/com/google/protobuf/Message;Lorg/apache/hbase/thirdparty/com/google/protobuf/Message;Lorg/apache/hadoop/hbase/security/User;Lorg/apache/hadoop/hbase/net/Address;)Lorg/apache/hbase/thirdparty/com/google/protobuf/Message;'
+    reason: hbase-client-call
+  - ownerPattern: org.apache.hadoop.hbase.ipc.AbstractRpcClient
+    methodPattern: callMethod
+    descriptorPattern: '(Lorg/apache/hbase/thirdparty/com/google/protobuf/Descriptors$MethodDescriptor;Lorg/apache/hadoop/hbase/ipc/HBaseRpcController;Lorg/apache/hbase/thirdparty/com/google/protobuf/Message;Lorg/apache/hbase/thirdparty/com/google/protobuf/Message;Lorg/apache/hadoop/hbase/security/User;Lorg/apache/hadoop/hbase/net/Address;Lorg/apache/hbase/thirdparty/com/google/protobuf/RpcCallback;)Lorg/apache/hadoop/hbase/ipc/Call;'
+    reason: hbase-client-call
+  - ownerPattern: org.apache.hadoop.hbase.ipc.RpcConnection
+    methodPattern: sendRequest
+    descriptorPattern: '(Lorg/apache/hadoop/hbase/ipc/Call;Lorg/apache/hadoop/hbase/ipc/HBaseRpcController;)V'
+    reason: hbase-rpc-send
+recvRules:
+  - ownerPattern: org.apache.hadoop.hbase.ipc.RpcServerInterface
+    methodPattern: call
+    descriptorPattern: '(Lorg/apache/hadoop/hbase/ipc/RpcCall;Lorg/apache/hadoop/hbase/monitoring/MonitoredRPCHandler;)Lorg/apache/hadoop/hbase/util/Pair;'
+    reason: hbase-rpcserver-call
+  - ownerPattern: org.apache.hadoop.hbase.ipc.ServerRpcConnection
+    methodPattern: processConnectionHeader
+    descriptorPattern: '(Lorg/apache/hadoop/hbase/nio/ByteBuff;)V'
+    reason: hbase-server-process
+  - ownerPattern: org.apache.hadoop.hbase.ipc.ServerRpcConnection
+    methodPattern: processRequest
+    descriptorPattern: '(Lorg/apache/hadoop/hbase/nio/ByteBuff;)V'
+    reason: hbase-server-process

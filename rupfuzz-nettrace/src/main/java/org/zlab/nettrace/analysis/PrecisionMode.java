@@ -1,6 +1,7 @@
 package org.zlab.nettrace.analysis;
 
 public enum PrecisionMode {
+  RTA("rta"),
   ZERO_CFA("zero-cfa"),
   ZERO_ONE_CFA("zero-one-cfa"),
   ZERO_ONE_CONTAINER_CFA("zero-one-container-cfa"),

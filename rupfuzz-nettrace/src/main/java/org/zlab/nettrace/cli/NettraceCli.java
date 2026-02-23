@@ -17,6 +17,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.zlab.nettrace.analysis.AnalysisConfig;
 import org.zlab.nettrace.analysis.AnalysisStats;
+import org.zlab.nettrace.analysis.EntrypointMode;
 import org.zlab.nettrace.analysis.Phase2DraftAnalyzer;
 import org.zlab.nettrace.analysis.Phase2DraftResult;
 import org.zlab.nettrace.analysis.PrecisionMode;
@@ -69,11 +70,12 @@ public final class NettraceCli {
       AnalysisStats stats = new AnalysisStats();
       stats.precision = config.precisionMode().cliName();
       stats.nCfaLevel = config.nCfaLevel();
+      stats.entrypointMode = config.entrypointMode().cliName();
       if (profile != null) {
         stats.addNote("Loaded profile: " + profile.id());
       }
 
-      WalaArtifacts artifacts = new WalaAnalysisBuilder().build(config, stats);
+      WalaArtifacts artifacts = new WalaAnalysisBuilder().build(config, profile, stats);
 
       AnchorDiscoveryResult anchorResult = new AnchorDiscoverer().discover(artifacts, config, profile);
       stats.rawSendAnchorCount = anchorResult.rawSendAnchors().size();
@@ -91,12 +93,19 @@ public final class NettraceCli {
             new Phase2DraftAnalyzer()
                 .analyze(
                     artifacts,
+                    anchorResult.rawSendAnchors(),
+                    anchorResult.rawRecvAnchors(),
                     anchorResult.resolvedSendAnchors(),
                     anchorResult.resolvedRecvAnchors());
 
         JsonOutputWriter.write(config.outputDir().resolve("netSendPoints.json"), phase2.sendPoints());
         JsonOutputWriter.write(config.outputDir().resolve("netRecvBeginPoints.json"), phase2.recvBeginPoints());
         JsonOutputWriter.write(config.outputDir().resolve("netRecvEndPoints.json"), phase2.recvEndPoints());
+        JsonOutputWriter.write(config.outputDir().resolve("netPhase2Diagnostics.json"), phase2.diagnostics());
+        stats.phase2ResolvedSendCount = phase2.diagnostics().resolvedSend();
+        stats.phase2ResolvedRecvCount = phase2.diagnostics().resolvedRecv();
+        stats.phase2FallbackSendCount = phase2.diagnostics().fallbackSend();
+        stats.phase2FallbackRecvCount = phase2.diagnostics().fallbackRecv();
       }
 
       AnalysisReportWriter.write(config.outputDir().resolve("netAnalysisReport.md"), config, stats);
@@ -166,13 +175,19 @@ public final class NettraceCli {
         Option.builder()
             .longOpt("precision")
             .hasArg()
-            .desc("Precision mode: zero-cfa|zero-one-cfa|zero-one-container-cfa|n-cfa")
+            .desc("Precision mode: rta|zero-cfa|zero-one-cfa|zero-one-container-cfa|n-cfa")
             .build());
     options.addOption(
         Option.builder()
             .longOpt("n-cfa-level")
             .hasArg()
             .desc("Context depth for n-cfa mode")
+            .build());
+    options.addOption(
+        Option.builder()
+            .longOpt("entrypoint-mode")
+            .hasArg()
+            .desc("Entrypoint mode: main|all-application|profile-seeded")
             .build());
     options.addOption(
         Option.builder()
@@ -184,7 +199,7 @@ public final class NettraceCli {
         Option.builder()
             .longOpt("profiles-dir")
             .hasArg()
-            .desc("Directory for profile files (default: rupfuzz-nettrace/profiles)")
+            .desc("Directory for profile files (default: profiles)")
             .build());
     options.addOption(
         Option.builder()
@@ -208,9 +223,11 @@ public final class NettraceCli {
     PrecisionMode precisionMode =
         PrecisionMode.parse(commandLine.getOptionValue("precision", "zero-one-cfa"));
     int nCfaLevel = Integer.parseInt(commandLine.getOptionValue("n-cfa-level", "1"));
+    EntrypointMode entrypointMode =
+        EntrypointMode.parse(commandLine.getOptionValue("entrypoint-mode", "profile-seeded"));
 
     String profile = commandLine.getOptionValue("profile", "");
-    Path profilesDir = Path.of(commandLine.getOptionValue("profiles-dir", "rupfuzz-nettrace/profiles"));
+    Path profilesDir = Path.of(commandLine.getOptionValue("profiles-dir", "profiles"));
     boolean phase2Draft = !commandLine.hasOption("disable-phase2-draft");
 
     return new AnalysisConfig(
@@ -224,6 +241,7 @@ public final class NettraceCli {
         outputDir,
         precisionMode,
         nCfaLevel,
+        entrypointMode,
         profile,
         profilesDir,
         phase2Draft);
@@ -251,6 +269,7 @@ public final class NettraceCli {
         config.outputDir(),
         config.precisionMode(),
         config.nCfaLevel(),
+        config.entrypointMode(),
         config.profile(),
         config.profilesDir(),
         config.phase2Draft());

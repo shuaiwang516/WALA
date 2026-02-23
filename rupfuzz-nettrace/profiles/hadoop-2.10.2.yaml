@@ -1,0 +1,49 @@
+id: hadoop-2.10.2
+description: Version-specific hadoop profile mined from validation output hdfs-2.10.2
+targetPrefixes:
+  - org.apache.hadoop.ipc
+  - org.apache.hadoop.hdfs.protocol
+excludePrefixes:
+  - org.apache.hadoop.io.compress
+sendRules:
+  - ownerPattern: org.apache.hadoop.ipc.Client$Call
+    methodPattern: callComplete
+    descriptorPattern: '()V'
+    reason: hadoop-client-call
+  - ownerPattern: org.apache.hadoop.ipc.Client
+    methodPattern: call
+    descriptorPattern: '(Lorg/apache/hadoop/ipc/RPC$RpcKind;Lorg/apache/hadoop/io/Writable;Lorg/apache/hadoop/ipc/Client$ConnectionId;ILjava/util/concurrent/atomic/AtomicBoolean;Lorg/apache/hadoop/ipc/AlignmentContext;)Lorg/apache/hadoop/io/Writable;'
+    reason: hadoop-client-call
+  - ownerPattern: org.apache.hadoop.ipc.Client
+    methodPattern: call
+    descriptorPattern: '(Lorg/apache/hadoop/ipc/RPC$RpcKind;Lorg/apache/hadoop/io/Writable;Lorg/apache/hadoop/ipc/Client$ConnectionId;Ljava/util/concurrent/atomic/AtomicBoolean;Lorg/apache/hadoop/ipc/AlignmentContext;)Lorg/apache/hadoop/io/Writable;'
+    reason: hadoop-client-call
+recvRules:
+  - ownerPattern: org.apache.hadoop.ipc.Server$Connection
+    methodPattern: processConnectionContext
+    descriptorPattern: '(Lorg/apache/hadoop/ipc/RpcWritable$Buffer;)V'
+    reason: hadoop-server-process
+  - ownerPattern: org.apache.hadoop.ipc.Server$Connection
+    methodPattern: processOneRpc
+    descriptorPattern: '(Ljava/nio/ByteBuffer;)V'
+    reason: hadoop-server-process
+  - ownerPattern: org.apache.hadoop.ipc.Server$Connection
+    methodPattern: processRpcOutOfBandRequest
+    descriptorPattern: '(Lorg/apache/hadoop/ipc/protobuf/RpcHeaderProtos$RpcRequestHeaderProto;Lorg/apache/hadoop/ipc/RpcWritable$Buffer;)V'
+    reason: hadoop-server-process
+  - ownerPattern: org.apache.hadoop.ipc.Server$Connection
+    methodPattern: processRpcRequest
+    descriptorPattern: '(Lorg/apache/hadoop/ipc/protobuf/RpcHeaderProtos$RpcRequestHeaderProto;Lorg/apache/hadoop/ipc/RpcWritable$Buffer;)V'
+    reason: hadoop-server-process
+  - ownerPattern: org.apache.hadoop.ipc.Server$Connection
+    methodPattern: processSaslMessage
+    descriptorPattern: '(Lorg/apache/hadoop/ipc/protobuf/RpcHeaderProtos$RpcSaslProto;)Lorg/apache/hadoop/ipc/protobuf/RpcHeaderProtos$RpcSaslProto;'
+    reason: hadoop-server-process
+  - ownerPattern: org.apache.hadoop.ipc.Server$Connection
+    methodPattern: processSaslToken
+    descriptorPattern: '(Lorg/apache/hadoop/ipc/protobuf/RpcHeaderProtos$RpcSaslProto;)Lorg/apache/hadoop/ipc/protobuf/RpcHeaderProtos$RpcSaslProto;'
+    reason: hadoop-server-process
+  - ownerPattern: org.apache.hadoop.ipc.Server
+    methodPattern: call
+    descriptorPattern: '(Lorg/apache/hadoop/ipc/RPC$RpcKind;Ljava/lang/String;Lorg/apache/hadoop/io/Writable;J)Lorg/apache/hadoop/io/Writable;'
+    reason: hadoop-server-call

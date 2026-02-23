@@ -1,0 +1,41 @@
+id: cassandra-3.11.19
+description: Version-specific cassandra profile mined from validation output cassandra-3.11.19
+targetPrefixes:
+  - org.apache.cassandra.net
+  - org.apache.cassandra.streaming
+excludePrefixes:
+  - org.apache.cassandra.utils.btree
+sendRules:
+  - ownerPattern: org.apache.cassandra.net.MessagingService
+    methodPattern: sendOneWay
+    descriptorPattern: '(Lorg/apache/cassandra/net/MessageOut;ILjava/net/InetAddress;)V'
+    reason: cassandra-messaging-send
+  - ownerPattern: org.apache.cassandra.net.MessagingService
+    methodPattern: sendReply
+    descriptorPattern: '(Lorg/apache/cassandra/net/MessageOut;ILjava/net/InetAddress;)V'
+    reason: cassandra-messaging-send
+  - ownerPattern: org.apache.cassandra.net.MessagingService
+    methodPattern: sendRR
+    descriptorPattern: '(Lorg/apache/cassandra/net/MessageOut;Ljava/net/InetAddress;Lorg/apache/cassandra/net/IAsyncCallback;)I'
+    reason: cassandra-messaging-send
+  - ownerPattern: org.apache.cassandra.net.MessagingService
+    methodPattern: sendRR
+    descriptorPattern: '(Lorg/apache/cassandra/net/MessageOut;Ljava/net/InetAddress;Lorg/apache/cassandra/net/IAsyncCallback;JZ)I'
+    reason: cassandra-messaging-send
+recvRules:
+  - ownerPattern: java.io.DataInputStream
+    methodPattern: readInt
+    descriptorPattern: '()I'
+    reason: cassandra-datainputstream-read
+  - ownerPattern: java.io.InputStream
+    methodPattern: read
+    descriptorPattern: '([BII)I'
+    reason: cassandra-inputstream-read
+  - ownerPattern: java.nio.channels.ReadableByteChannel
+    methodPattern: read
+    descriptorPattern: '(Ljava/nio/ByteBuffer;)I'
+    reason: cassandra-channel-read
+  - ownerPattern: org.apache.cassandra.io.util.DataInputBuffer
+    methodPattern: readUnsignedShort
+    descriptorPattern: '()I'
+    reason: cassandra-datainput-read

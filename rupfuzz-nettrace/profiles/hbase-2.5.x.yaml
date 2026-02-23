@@ -3,8 +3,6 @@ description: HBase IPC and Netty anchor seeds for 2.5-style codebases
 targetPrefixes:
   - org.apache.hadoop.hbase.ipc
   - org.apache.hbase.thirdparty.io.netty
-excludePrefixes:
-  - org.apache.hadoop.hbase.util
 sendRules:
   - ownerPattern: org.apache.hadoop.hbase.ipc.RpcConnection*
     methodPattern: send*

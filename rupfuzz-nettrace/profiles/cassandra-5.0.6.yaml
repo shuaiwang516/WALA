@@ -1,0 +1,49 @@
+id: cassandra-5.0.6
+description: Version-specific cassandra profile mined from validation output cassandra-5.0.6
+targetPrefixes:
+  - org.apache.cassandra.net
+  - org.apache.cassandra.streaming
+excludePrefixes:
+  - org.apache.cassandra.utils.btree
+sendRules:
+  - ownerPattern: org.apache.cassandra.net.MessagingService
+    methodPattern: send
+    descriptorPattern: '(Lorg/apache/cassandra/net/Message;Lorg/apache/cassandra/locator/InetAddressAndPort;Lorg/apache/cassandra/net/ConnectionType;)V'
+    reason: cassandra-messaging-send
+  - ownerPattern: org.apache.cassandra.net.MessagingService
+    methodPattern: send
+    descriptorPattern: '(Lorg/apache/cassandra/net/Message;Lorg/apache/cassandra/locator/InetAddressAndPort;)V'
+    reason: cassandra-messaging-send
+  - ownerPattern: org.apache.cassandra.net.MessagingService
+    methodPattern: sendWithCallback
+    descriptorPattern: '(Lorg/apache/cassandra/net/Message;Lorg/apache/cassandra/locator/InetAddressAndPort;Lorg/apache/cassandra/net/RequestCallback;Lorg/apache/cassandra/net/ConnectionType;)V'
+    reason: cassandra-messaging-send
+  - ownerPattern: org.apache.cassandra.net.MessagingService
+    methodPattern: sendWithCallback
+    descriptorPattern: '(Lorg/apache/cassandra/net/Message;Lorg/apache/cassandra/locator/InetAddressAndPort;Lorg/apache/cassandra/net/RequestCallback;)V'
+    reason: cassandra-messaging-send
+  - ownerPattern: org.apache.cassandra.net.OutboundConnection
+    methodPattern: enqueue
+    descriptorPattern: '(Lorg/apache/cassandra/net/Message;)V'
+    reason: cassandra-outbound-enqueue
+  - ownerPattern: org.apache.cassandra.net.OutboundConnections
+    methodPattern: enqueue
+    descriptorPattern: '(Lorg/apache/cassandra/net/Message;Lorg/apache/cassandra/net/ConnectionType;)V'
+    reason: cassandra-outbound-enqueue
+recvRules:
+  - ownerPattern: java.nio.channels.FileChannel
+    methodPattern: read
+    descriptorPattern: '(Ljava/nio/ByteBuffer;)I'
+    reason: cassandra-channel-read
+  - ownerPattern: java.nio.channels.FileChannel
+    methodPattern: read
+    descriptorPattern: '(Ljava/nio/ByteBuffer;J)I'
+    reason: cassandra-channel-read
+  - ownerPattern: java.nio.channels.ReadableByteChannel
+    methodPattern: read
+    descriptorPattern: '(Ljava/nio/ByteBuffer;)I'
+    reason: cassandra-channel-read
+  - ownerPattern: org.apache.cassandra.io.util.DataInputBuffer
+    methodPattern: readInt
+    descriptorPattern: '()I'
+    reason: cassandra-datainput-read

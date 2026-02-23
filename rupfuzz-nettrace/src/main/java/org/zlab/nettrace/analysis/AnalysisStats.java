@@ -7,6 +7,7 @@ import java.util.List;
 public final class AnalysisStats {
   public String precision;
   public int nCfaLevel;
+  public String entrypointMode;
   public long scopeBuildMillis;
   public long chaBuildMillis;
   public long callGraphBuildMillis;
@@ -22,6 +23,10 @@ public final class AnalysisStats {
 
   public int rawSendAnchorCount;
   public int rawRecvAnchorCount;
+  public int phase2ResolvedSendCount;
+  public int phase2ResolvedRecvCount;
+  public int phase2FallbackSendCount;
+  public int phase2FallbackRecvCount;
 
   private final List<String> notes = new ArrayList<>();
 

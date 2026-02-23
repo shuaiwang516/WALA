@@ -24,6 +24,7 @@ public final class AnalysisReportWriter {
     builder.append("- Generated: ").append(Instant.now()).append("\n");
     builder.append("- Precision mode: `").append(stats.precision).append("`\n");
     builder.append("- n-CFA level: `").append(stats.nCfaLevel).append("`\n");
+    builder.append("- Entrypoint mode: `").append(stats.entrypointMode).append("`\n");
     builder.append("- Output dir: `").append(config.outputDir()).append("`\n");
     builder.append("- Profile: `").append(config.profile() == null ? "none" : config.profile()).append("`\n");
     builder.append("\n");
@@ -41,6 +42,10 @@ public final class AnalysisReportWriter {
     builder.append("## Anchor Stats\n\n");
     builder.append("- Raw send anchors: ").append(stats.rawSendAnchorCount).append("\n");
     builder.append("- Raw recv anchors: ").append(stats.rawRecvAnchorCount).append("\n");
+    builder.append("- Phase2 resolved send: ").append(stats.phase2ResolvedSendCount).append("\n");
+    builder.append("- Phase2 resolved recv: ").append(stats.phase2ResolvedRecvCount).append("\n");
+    builder.append("- Phase2 fallback send: ").append(stats.phase2FallbackSendCount).append("\n");
+    builder.append("- Phase2 fallback recv: ").append(stats.phase2FallbackRecvCount).append("\n");
     builder.append("\n");
 
     builder.append("## Timings\n\n");

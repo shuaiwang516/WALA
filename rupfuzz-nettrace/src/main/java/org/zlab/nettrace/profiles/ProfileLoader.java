@@ -43,6 +43,11 @@ public final class ProfileLoader {
       return direct;
     }
 
+    Path directAbsolute = direct.toAbsolutePath().normalize();
+    if (Files.exists(directAbsolute)) {
+      return directAbsolute;
+    }
+
     String fileName = profileArg;
     if (!fileName.endsWith(".yaml") && !fileName.endsWith(".yml")) {
       fileName = fileName + ".yaml";
@@ -53,9 +58,19 @@ public final class ProfileLoader {
       return byDirectory;
     }
 
+    Path byDirectoryAbsolute = byDirectory.toAbsolutePath().normalize();
+    if (Files.exists(byDirectoryAbsolute)) {
+      return byDirectoryAbsolute;
+    }
+
     Path moduleDefault = Path.of("rupfuzz-nettrace", "profiles", fileName);
     if (Files.exists(moduleDefault)) {
       return moduleDefault;
+    }
+
+    Path parentModuleDefault = Path.of("..", "rupfuzz-nettrace", "profiles", fileName).normalize();
+    if (Files.exists(parentModuleDefault)) {
+      return parentModuleDefault;
     }
 
     throw new IllegalArgumentException(
@@ -64,9 +79,15 @@ public final class ProfileLoader {
             + " (checked "
             + direct
             + ", "
+            + directAbsolute
+            + ", "
             + byDirectory
             + ", "
+            + byDirectoryAbsolute
+            + ", "
             + moduleDefault
+            + ", "
+            + parentModuleDefault
             + ")");
   }
 

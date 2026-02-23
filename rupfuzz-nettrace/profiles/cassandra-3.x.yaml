@@ -23,3 +23,19 @@ recvRules:
     methodPattern: execute*
     descriptorPattern: '*'
     reason: cassandra-verb-dispatch
+  - ownerPattern: java.nio.channels.*Channel
+    methodPattern: read*
+    descriptorPattern: '*'
+    reason: cassandra-channel-read
+  - ownerPattern: org.apache.cassandra.io.util.DataInputBuffer
+    methodPattern: read*
+    descriptorPattern: '*'
+    reason: cassandra-datainput-read
+  - ownerPattern: java.io.InputStream
+    methodPattern: read*
+    descriptorPattern: '*'
+    reason: cassandra-inputstream-read
+  - ownerPattern: java.io.DataInputStream
+    methodPattern: read*
+    descriptorPattern: '*'
+    reason: cassandra-datainputstream-read

@@ -14,6 +14,7 @@ public final class AnalysisConfig {
   private final Path outputDir;
   private final PrecisionMode precisionMode;
   private final int nCfaLevel;
+  private final EntrypointMode entrypointMode;
   private final String profile;
   private final Path profilesDir;
   private final boolean phase2Draft;
@@ -29,6 +30,7 @@ public final class AnalysisConfig {
       Path outputDir,
       PrecisionMode precisionMode,
       int nCfaLevel,
+      EntrypointMode entrypointMode,
       String profile,
       Path profilesDir,
       boolean phase2Draft) {
@@ -42,6 +44,7 @@ public final class AnalysisConfig {
     this.outputDir = outputDir;
     this.precisionMode = precisionMode;
     this.nCfaLevel = nCfaLevel;
+    this.entrypointMode = entrypointMode;
     this.profile = profile;
     this.profilesDir = profilesDir;
     this.phase2Draft = phase2Draft;
@@ -85,6 +88,10 @@ public final class AnalysisConfig {
 
   public int nCfaLevel() {
     return nCfaLevel;
+  }
+
+  public EntrypointMode entrypointMode() {
+    return entrypointMode;
   }
 
   public String profile() {
