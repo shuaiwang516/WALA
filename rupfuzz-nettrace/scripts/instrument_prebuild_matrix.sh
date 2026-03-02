@@ -726,10 +726,12 @@ verify_source_instrumentation() {
       expect_hook_in_file "$messaging_file" 'NetTraceRuntimeBridge\.recordSend\("MessagingService\.(sendOneWay|doSend)"' "cassandra send hook" || return 1
       if [[ "$version" == 3.* ]]; then
         local incoming_file="$src_root/src/java/org/apache/cassandra/net/IncomingTcpConnection.java"
-        expect_hook_in_file "$incoming_file" 'NetTraceRuntimeBridge\.beginReceive\("IncomingTcpConnection\.receiveMessage"' "cassandra receive hook (3.x)" || return 1
+        expect_hook_in_file "$incoming_file" 'NetTraceRuntimeBridge\.beginReceive\(' "cassandra receive hook call (3.x)" || return 1
+        expect_hook_in_file "$incoming_file" 'IncomingTcpConnection\.receiveMessage' "cassandra receive hook label (3.x)" || return 1
       else
         local inbound_file="$src_root/src/java/org/apache/cassandra/net/InboundMessageHandler.java"
-        expect_hook_in_file "$inbound_file" 'NetTraceRuntimeBridge\.beginReceive\("InboundMessageHandler\.ProcessMessage\.run"' "cassandra receive hook (4.x/5.x)" || return 1
+        expect_hook_in_file "$inbound_file" 'NetTraceRuntimeBridge\.beginReceive\(' "cassandra receive hook call (4.x/5.x)" || return 1
+        expect_hook_in_file "$inbound_file" 'InboundMessageHandler\.ProcessMessage\.run' "cassandra receive hook label (4.x/5.x)" || return 1
       fi
       ;;
     hdfs)
@@ -738,7 +740,8 @@ verify_source_instrumentation() {
       local hdfs_server="$src_root/hadoop-common-project/hadoop-common/src/main/java/org/apache/hadoop/ipc/Server.java"
       expect_hook_in_file "$hdfs_bridge" 'org.zlab.net.tracker.Runtime' "hdfs bridge runtime target" || return 1
       expect_hook_in_file "$hdfs_client" 'NetTraceRuntimeBridge\.recordSend\("Client\.call"' "hdfs send hook" || return 1
-      expect_hook_in_file "$hdfs_server" 'NetTraceRuntimeBridge\.beginReceive\("Server\.Connection\.processRpcRequest"' "hdfs receive hook" || return 1
+      expect_hook_in_file "$hdfs_server" 'NetTraceRuntimeBridge\.beginReceive\(' "hdfs receive hook call" || return 1
+      expect_hook_in_file "$hdfs_server" 'Server\.Connection\.processRpcRequest' "hdfs receive hook label" || return 1
       ;;
     hbase)
       local hbase_bridge="$src_root/hbase-client/src/main/java/org/apache/hadoop/hbase/ipc/NetTraceRuntimeBridge.java"
@@ -746,7 +749,8 @@ verify_source_instrumentation() {
       local hbase_server="$src_root/hbase-server/src/main/java/org/apache/hadoop/hbase/ipc/ServerRpcConnection.java"
       expect_hook_in_file "$hbase_bridge" 'org.zlab.net.tracker.Runtime' "hbase bridge runtime target" || return 1
       expect_hook_in_file "$hbase_client" 'NetTraceRuntimeBridge\.recordSend\("AbstractRpcClient\.callMethod"' "hbase send hook" || return 1
-      expect_hook_in_file "$hbase_server" 'NetTraceRuntimeBridge\.beginReceive\("ServerRpcConnection\.processRequest"' "hbase receive hook" || return 1
+      expect_hook_in_file "$hbase_server" 'NetTraceRuntimeBridge\.beginReceive\(' "hbase receive hook call" || return 1
+      expect_hook_in_file "$hbase_server" 'ServerRpcConnection\.processRequest' "hbase receive hook label" || return 1
       ;;
     *)
       echo "verify: unsupported project ${project}" >&2
