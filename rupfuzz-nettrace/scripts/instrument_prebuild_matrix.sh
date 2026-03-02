@@ -92,7 +92,7 @@ public final class NetTraceRuntimeBridge {
 
     public static void hit(int branchId) {
         ensureInitialized();
-        invokeVoid(hitMethod, branchId);
+        invokeRuntimeVoid(hitMethod, branchId);
     }
 
     public static void recordSend(String name, int id, Object message, Object... contextArgs) {
@@ -303,7 +303,13 @@ public final class NetTraceRuntimeBridge {
     }
 
     private static String detectPeer(Object message, Object[] contextArgs) {
+        if (contextArgs == null) {
+            return stringFromAccessor(message, "getPeer", "peer", "getTo", "getAddress");
+        }
         for (Object arg : contextArgs) {
+            if (arg == null) {
+                continue;
+            }
             String candidate = stringFromAccessor(arg, "getHostAddress", "getHostName",
                     "getAddress", "address", "getRemoteAddress", "remoteAddress", "getPeer",
                     "peer");
@@ -332,10 +338,12 @@ public final class NetTraceRuntimeBridge {
         if (fromMessage != null) {
             return fromMessage;
         }
-        for (Object arg : contextArgs) {
-            String candidate = stringFromAccessor(arg, "verb", "getVerb", "type", "getType");
-            if (candidate != null) {
-                return candidate;
+        if (contextArgs != null) {
+            for (Object arg : contextArgs) {
+                String candidate = stringFromAccessor(arg, "verb", "getVerb", "type", "getType");
+                if (candidate != null) {
+                    return candidate;
+                }
             }
         }
         return message != null ? message.getClass().getSimpleName() : null;
@@ -347,11 +355,13 @@ public final class NetTraceRuntimeBridge {
         if (fromMessage != null) {
             return fromMessage;
         }
-        for (Object arg : contextArgs) {
-            String candidate = stringFromAccessor(arg, "version", "getVersion",
-                    "protocolVersion", "getProtocolVersion");
-            if (candidate != null) {
-                return candidate;
+        if (contextArgs != null) {
+            for (Object arg : contextArgs) {
+                String candidate = stringFromAccessor(arg, "version", "getVersion",
+                        "protocolVersion", "getProtocolVersion");
+                if (candidate != null) {
+                    return candidate;
+                }
             }
         }
         return null;
@@ -364,11 +374,13 @@ public final class NetTraceRuntimeBridge {
         if (fromMessage != null) {
             return fromMessage;
         }
-        for (Object arg : contextArgs) {
-            String candidate = stringFromAccessor(arg, "id", "getId", "messageId", "getMessageId",
-                    "streamId", "getStreamId", "sessionId", "getSessionId");
-            if (candidate != null) {
-                return candidate;
+        if (contextArgs != null) {
+            for (Object arg : contextArgs) {
+                String candidate = stringFromAccessor(arg, "id", "getId", "messageId", "getMessageId",
+                        "streamId", "getStreamId", "sessionId", "getSessionId");
+                if (candidate != null) {
+                    return candidate;
+                }
             }
         }
         return null;
@@ -381,11 +393,13 @@ public final class NetTraceRuntimeBridge {
         if (fromMessage != null) {
             return fromMessage;
         }
-        for (Object arg : contextArgs) {
-            String candidate = stringFromAccessor(arg, "deliveryId", "getDeliveryId", "requestId",
-                    "getRequestId");
-            if (candidate != null) {
-                return candidate;
+        if (contextArgs != null) {
+            for (Object arg : contextArgs) {
+                String candidate = stringFromAccessor(arg, "deliveryId", "getDeliveryId", "requestId",
+                        "getRequestId");
+                if (candidate != null) {
+                    return candidate;
+                }
             }
         }
         if (logicalMessageId != null && peer != null) {
@@ -395,7 +409,13 @@ public final class NetTraceRuntimeBridge {
     }
 
     private static String detectChannel(Object[] contextArgs) {
+        if (contextArgs == null) {
+            return null;
+        }
         for (Object arg : contextArgs) {
+            if (arg == null) {
+                continue;
+            }
             String className = arg.getClass().getName();
             if (className.contains("ConnectionType") || className.contains("Channel")
                     || className.contains("Connection")) {
@@ -417,17 +437,22 @@ public final class NetTraceRuntimeBridge {
                 || className.startsWith("org.apache.hadoop.hdfs.")) {
             return "hdfs-rpc";
         }
-        for (Object arg : contextArgs) {
-            String argClass = arg.getClass().getName();
-            if (argClass.startsWith("org.apache.cassandra.")) {
-                return "cassandra";
-            }
-            if (argClass.startsWith("org.apache.hadoop.hbase.")) {
-                return "hbase";
-            }
-            if (argClass.startsWith("org.apache.hadoop.ipc.")
-                    || argClass.startsWith("org.apache.hadoop.hdfs.")) {
-                return "hdfs-rpc";
+        if (contextArgs != null) {
+            for (Object arg : contextArgs) {
+                if (arg == null) {
+                    continue;
+                }
+                String argClass = arg.getClass().getName();
+                if (argClass.startsWith("org.apache.cassandra.")) {
+                    return "cassandra";
+                }
+                if (argClass.startsWith("org.apache.hadoop.hbase.")) {
+                    return "hbase";
+                }
+                if (argClass.startsWith("org.apache.hadoop.ipc.")
+                        || argClass.startsWith("org.apache.hadoop.hdfs.")) {
+                    return "hdfs-rpc";
+                }
             }
         }
         return null;
@@ -445,6 +470,9 @@ public final class NetTraceRuntimeBridge {
     }
 
     private static int detectTargetCount(Object[] contextArgs) {
+        if (contextArgs == null) {
+            return 1;
+        }
         for (Object arg : contextArgs) {
             if (arg == null) {
                 continue;
