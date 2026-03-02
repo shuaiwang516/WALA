@@ -8,3 +8,4 @@ bin/
 /.gradle/
 /.vscode/settings.json
 build/
+**/prebuild/
