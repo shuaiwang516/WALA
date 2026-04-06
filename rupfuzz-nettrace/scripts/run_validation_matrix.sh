@@ -64,7 +64,7 @@ build_hbase() {
   local java_home="$JAVA11"
   local modules="hbase-common,hbase-client,hbase-server,hbase-protocol-shaded,hbase-protocol"
   local -a mvn_flags=("-q" "-DskipTests" "-Denforcer.skip=true")
-  if [[ "$version" == 3.* ]]; then
+  if [[ "$version" == 3.* || "$version" == 4.* ]]; then
     java_home="$JAVA17"
     modules="hbase-common,hbase-client,hbase-server,hbase-protocol-shaded"
   else
@@ -245,7 +245,7 @@ run_target() {
     if ! build_hbase "$version"; then
       build_status="fail"
     fi
-    if [[ "$version" == 3.* ]]; then
+    if [[ "$version" == 3.* || "$version" == 4.* ]]; then
       cp=$(make_cp_from_list \
         "$PREBUILD/hbase-${version}/hbase-common/target/classes" \
         "$PREBUILD/hbase-${version}/hbase-client/target/classes" \
@@ -292,6 +292,6 @@ run_target hdfs 3.4.2 org.apache.hadoop.util.VersionInfo hadoop-3.4.2.yaml org.a
 
 run_target hbase 2.5.13 org.apache.hadoop.hbase.util.VersionInfo hbase-2.5.13.yaml org.apache.hadoop.hbase.ipc org.apache.hbase.thirdparty.io.netty
 run_target hbase 2.6.4 org.apache.hadoop.hbase.util.VersionInfo hbase-2.6.4.yaml org.apache.hadoop.hbase.ipc org.apache.hbase.thirdparty.io.netty
-run_target hbase 3.0.0-beta-1 org.apache.hadoop.hbase.util.VersionInfo hbase-3.0.0-beta-1.yaml org.apache.hadoop.hbase.ipc org.apache.hbase.thirdparty.io.netty
+run_target hbase 4.0.0-alpha-1-SNAPSHOT org.apache.hadoop.hbase.util.VersionInfo hbase-4.0.0-alpha-1-SNAPSHOT.yaml org.apache.hadoop.hbase.ipc org.apache.hbase.thirdparty.io.netty
 
 cat "$SUMMARY_CSV"

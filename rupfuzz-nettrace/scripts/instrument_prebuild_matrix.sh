@@ -794,7 +794,7 @@ build_hbase() {
   local log_file="$4"
   local modules="hbase-common,hbase-client,hbase-server,hbase-protocol-shaded,hbase-protocol"
   local -a mvn_flags=("-q" "-DskipTests" "-Denforcer.skip=true")
-  if [[ "$version" == 3.* ]]; then
+  if [[ "$version" == 3.* || "$version" == 4.* ]]; then
     modules="hbase-common,hbase-client,hbase-server,hbase-protocol-shaded"
   else
     mvn_flags+=("-Dhadoop.profile=3.0")
@@ -1022,10 +1022,10 @@ main() {
       "$JAVA11" || failures=$((failures + 1))
   fi
 
-  if should_run "hbase-3.0.0-beta-1"; then
-    run_target hbase 3.0.0-beta-1 \
-      "$PREBUILD_DIR/hbase/hbase-3.0.0-beta-1-src.tar.gz" \
-      "$PROFILE_DIR/hbase-3.0.0-beta-1.yaml" \
+  if should_run "hbase-4.0.0-alpha-1-SNAPSHOT"; then
+    run_target hbase 4.0.0-alpha-1-SNAPSHOT \
+      "$PREBUILD_DIR/hbase/hbase-4.0.0-alpha-1-SNAPSHOT-src.tar.gz" \
+      "$PROFILE_DIR/hbase-4.0.0-alpha-1-SNAPSHOT.yaml" \
       "$JAVA17" || failures=$((failures + 1))
   fi
 

@@ -83,7 +83,7 @@ build_hbase() {
   local java_home="$JAVA11"
   local modules="hbase-common,hbase-client,hbase-server,hbase-protocol-shaded,hbase-protocol"
   local -a mvn_flags=("-q" "-DskipTests" "-Denforcer.skip=true")
-  if [[ "$version" == 3.* ]]; then
+  if [[ "$version" == 3.* || "$version" == 4.* ]]; then
     java_home="$JAVA17"
     modules="hbase-common,hbase-client,hbase-server,hbase-protocol-shaded"
   else
@@ -206,7 +206,7 @@ run_hbase_version() {
 
   local root="$PREBUILD/hbase-${version}"
   local modules=("hbase-common" "hbase-client" "hbase-server" "hbase-protocol-shaded")
-  if [[ "$version" != 3.* ]]; then
+  if [[ "$version" != 3.* && "$version" != 4.* ]]; then
     modules+=("hbase-protocol")
   fi
 
@@ -239,7 +239,7 @@ main() {
 
   run_hbase_version "2.5.13" "$tool_cp"
   run_hbase_version "2.6.4" "$tool_cp"
-  run_hbase_version "3.0.0-beta-1" "$tool_cp"
+  run_hbase_version "4.0.0-alpha-1-SNAPSHOT" "$tool_cp"
 
   echo "Wrote summary: $SUMMARY_CSV"
 }
