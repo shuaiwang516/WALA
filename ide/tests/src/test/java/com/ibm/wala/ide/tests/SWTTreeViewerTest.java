@@ -10,6 +10,8 @@
  */
 package com.ibm.wala.ide.tests;
 
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
+
 import com.ibm.wala.ide.ui.SWTTreeViewer;
 import com.ibm.wala.util.WalaException;
 import com.ibm.wala.util.collections.Pair;
@@ -23,6 +25,9 @@ public class SWTTreeViewerTest {
 
   @Test
   public void testJustOpen() throws WalaException {
+    assumeTrue(
+        System.getenv("DISPLAY") != null && !System.getenv("DISPLAY").isEmpty(),
+        "Skipping SWT test: no DISPLAY available (headless environment)");
     Pair<Graph<String>, Collection<String>> testGraphAndRoots = makeTestGraphAndRoots();
     final SWTTreeViewer<String> v = new SWTTreeViewer<>();
     v.setGraphInput(testGraphAndRoots.fst);

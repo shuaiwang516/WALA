@@ -69,20 +69,13 @@ class NettraceCliIntegrationTest {
     assertThat(recvAnchors).isNotEmpty();
   }
 
-  private static void compileJava(Path javaFile, Path classesDir) throws IOException {
+  private static void compileJava(Path javaFile, Path classesDir) {
     JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
     if (compiler == null) {
       throw new IllegalStateException("No system Java compiler available");
     }
 
-    int code =
-        compiler.run(
-            null,
-            null,
-            null,
-            "-d",
-            classesDir.toString(),
-            javaFile.toString());
+    int code = compiler.run(null, null, null, "-d", classesDir.toString(), javaFile.toString());
 
     if (code != 0) {
       throw new IllegalStateException("javac failed with exit code " + code);

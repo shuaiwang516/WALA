@@ -2,17 +2,17 @@ package org.zlab.nettrace.analysis;
 
 import com.ibm.wala.classLoader.CallSiteReference;
 import com.ibm.wala.classLoader.IBytecodeMethod;
-import com.ibm.wala.classLoader.Language;
 import com.ibm.wala.classLoader.IClass;
 import com.ibm.wala.classLoader.IMethod;
+import com.ibm.wala.classLoader.Language;
 import com.ibm.wala.core.util.config.AnalysisScopeReader;
 import com.ibm.wala.core.util.strings.Atom;
 import com.ibm.wala.ipa.callgraph.AnalysisCacheImpl;
 import com.ibm.wala.ipa.callgraph.AnalysisOptions;
 import com.ibm.wala.ipa.callgraph.AnalysisScope;
 import com.ibm.wala.ipa.callgraph.CGNode;
-import com.ibm.wala.ipa.callgraph.CallGraphBuilder;
 import com.ibm.wala.ipa.callgraph.CallGraph;
+import com.ibm.wala.ipa.callgraph.CallGraphBuilder;
 import com.ibm.wala.ipa.callgraph.Entrypoint;
 import com.ibm.wala.ipa.callgraph.impl.AllApplicationEntrypoints;
 import com.ibm.wala.ipa.callgraph.impl.DefaultEntrypoint;
@@ -23,11 +23,11 @@ import com.ibm.wala.ipa.callgraph.propagation.PointerKey;
 import com.ibm.wala.ipa.cha.ClassHierarchyException;
 import com.ibm.wala.ipa.cha.ClassHierarchyFactory;
 import com.ibm.wala.ipa.cha.IClassHierarchy;
+import com.ibm.wala.shrike.shrikeCT.InvalidClassFileException;
 import com.ibm.wala.types.Descriptor;
 import com.ibm.wala.types.MethodReference;
 import com.ibm.wala.types.TypeName;
 import com.ibm.wala.types.TypeReference;
-import com.ibm.wala.shrike.shrikeCT.InvalidClassFileException;
 import com.ibm.wala.util.CancelException;
 import com.ibm.wala.util.config.PatternsFilter;
 import java.io.IOException;
@@ -68,7 +68,8 @@ public final class WalaAnalysisBuilder {
       mainClasses.addAll(EntrypointConfigLoader.loadMainClasses(config.entrypointConfig()));
     }
 
-    List<Entrypoint> entrypoints = buildEntrypoints(scope, cha, mainClasses, config, profile, stats);
+    List<Entrypoint> entrypoints =
+        buildEntrypoints(scope, cha, mainClasses, config, profile, stats);
     stats.entrypointCount = entrypoints.size();
     AnalysisOptions options = new AnalysisOptions(scope, entrypoints);
 
@@ -166,7 +167,8 @@ public final class WalaAnalysisBuilder {
     if (mode == EntrypointMode.MAIN) {
       if (resolvableMainClasses.isEmpty()) {
         throw new IllegalArgumentException(
-            "No entrypoints resolved from configured main classes: " + String.join(", ", mainClasses));
+            "No entrypoints resolved from configured main classes: "
+                + String.join(", ", mainClasses));
       }
       return buildMainEntrypoints(cha, resolvableMainClasses);
     }
@@ -208,14 +210,17 @@ public final class WalaAnalysisBuilder {
     return resolvable;
   }
 
-  private static List<Entrypoint> buildMainEntrypoints(IClassHierarchy cha, List<String> mainClasses) {
+  private static List<Entrypoint> buildMainEntrypoints(
+      IClassHierarchy cha, List<String> mainClasses) {
     List<Entrypoint> result = new ArrayList<>();
-    for (Entrypoint entrypoint : Util.makeMainEntrypoints(cha, mainClasses.toArray(new String[0]))) {
+    for (Entrypoint entrypoint :
+        Util.makeMainEntrypoints(cha, mainClasses.toArray(new String[0]))) {
       result.add(entrypoint);
     }
     if (result.isEmpty()) {
       throw new IllegalArgumentException(
-          "No entrypoints resolved from configured main classes: " + String.join(", ", mainClasses));
+          "No entrypoints resolved from configured main classes: "
+              + String.join(", ", mainClasses));
     }
     return result;
   }
@@ -285,7 +290,8 @@ public final class WalaAnalysisBuilder {
         String methodName = method.getName().toString();
         String descriptor = method.getDescriptor().toString();
         boolean profileMatch = matchesAnyRule(rules, ownerInternal, methodName, descriptor);
-        boolean genericMatch = GENERIC_MATCHER.match(ownerInternal, methodName, hierarchyNames) != null;
+        boolean genericMatch =
+            GENERIC_MATCHER.match(ownerInternal, methodName, hierarchyNames) != null;
         if (profileMatch || genericMatch) {
           if (tryAddSeedEntrypoint(entrypoints, method, cha)) {
             seeded++;
@@ -327,9 +333,7 @@ public final class WalaAnalysisBuilder {
               matchesAnyRule(rules, targetOwnerInternal, targetMethodName, targetDescriptor);
           boolean targetGenericMatch =
               GENERIC_MATCHER.match(
-                      targetOwnerInternal,
-                      targetMethodName,
-                      collectHierarchyNames(cha, target))
+                      targetOwnerInternal, targetMethodName, collectHierarchyNames(cha, target))
                   != null;
           if (!targetProfileMatch && !targetGenericMatch) {
             continue;
@@ -489,7 +493,8 @@ public final class WalaAnalysisBuilder {
     if (mode == PrecisionMode.N_CFA) {
       return Util.makeNCFABuilder(config.nCfaLevel(), options, cache, cha);
     }
-    throw new IllegalArgumentException("Unhandled precision mode: " + mode.name().toLowerCase(Locale.ROOT));
+    throw new IllegalArgumentException(
+        "Unhandled precision mode: " + mode.name().toLowerCase(Locale.ROOT));
   }
 
   private static void collectStats(

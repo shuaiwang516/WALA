@@ -125,8 +125,7 @@ public final class AnchorDiscoverer {
                   descriptor);
           if (profileAnchor != null) {
             addRawAnchor(profileAnchor, rawSendAnchors, rawRecvAnchors);
-            addResolvedAnchor(
-                profileAnchor, node, index, resolvedSendAnchors, resolvedRecvAnchors);
+            addResolvedAnchor(profileAnchor, node, index, resolvedSendAnchors, resolvedRecvAnchors);
           }
         }
       }
@@ -265,7 +264,8 @@ public final class AnchorDiscoverer {
       String ownerInternal,
       String methodName,
       String descriptor) {
-    String sendReason = matchProfileRules(profile.sendRules(), ownerInternal, methodName, descriptor);
+    String sendReason =
+        matchProfileRules(profile.sendRules(), ownerInternal, methodName, descriptor);
     if (sendReason != null) {
       return buildRawAnchor(
           callerMethod,
@@ -281,7 +281,8 @@ public final class AnchorDiscoverer {
           0.9);
     }
 
-    String recvReason = matchProfileRules(profile.recvRules(), ownerInternal, methodName, descriptor);
+    String recvReason =
+        matchProfileRules(profile.recvRules(), ownerInternal, methodName, descriptor);
     if (recvReason != null) {
       return buildRawAnchor(
           callerMethod,

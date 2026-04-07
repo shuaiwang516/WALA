@@ -26,7 +26,10 @@ public final class AnalysisReportWriter {
     builder.append("- n-CFA level: `").append(stats.nCfaLevel).append("`\n");
     builder.append("- Entrypoint mode: `").append(stats.entrypointMode).append("`\n");
     builder.append("- Output dir: `").append(config.outputDir()).append("`\n");
-    builder.append("- Profile: `").append(config.profile() == null ? "none" : config.profile()).append("`\n");
+    builder
+        .append("- Profile: `")
+        .append(config.profile() == null ? "none" : config.profile())
+        .append("`\n");
     builder.append("\n");
 
     builder.append("## Scope and Graph Stats\n\n");
@@ -34,7 +37,10 @@ public final class AnalysisReportWriter {
     builder.append("- Application classes: ").append(stats.applicationClassCount).append("\n");
     builder.append("- Entrypoints: ").append(stats.entrypointCount).append("\n");
     builder.append("- Call graph nodes: ").append(stats.callGraphNodeCount).append("\n");
-    builder.append("- Application call graph nodes: ").append(stats.applicationCallGraphNodeCount).append("\n");
+    builder
+        .append("- Application call graph nodes: ")
+        .append(stats.applicationCallGraphNodeCount)
+        .append("\n");
     builder.append("- Pointer keys: ").append(stats.pointerKeyCount).append("\n");
     builder.append("- Instance keys: ").append(stats.instanceKeyCount).append("\n");
     builder.append("\n");

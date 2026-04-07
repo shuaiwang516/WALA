@@ -8,7 +8,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 public final class JsonOutputWriter {
-  private static final Gson GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
+  private static final Gson GSON =
+      new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
 
   private JsonOutputWriter() {}
 

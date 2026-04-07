@@ -110,6 +110,13 @@ val lintMarkdown by
         cacheIf { true }
       }
       doLast { outputs.files.singleFile.createNewFile() }
+      // markdownlint-cli2 requires Node >= 18 for ESM regex flag support
+      onlyIf {
+        val result =
+            providers.exec { commandLine("node", "--version") }.standardOutput.asText.get().trim()
+        val major = result.removePrefix("v").substringBefore(".").toIntOrNull() ?: 0
+        major >= 18
+      }
     }
 
 tasks.named("check") { dependsOn("buildHealth", lintMarkdown) }

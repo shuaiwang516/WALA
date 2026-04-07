@@ -59,7 +59,8 @@ public final class Phase2DraftAnalyzer {
         slicedSends++;
       }
       double confidence =
-          Math.min(0.95, resolved.rawAnchor().confidence() + Math.min(20, appSliceStatements) / 200.0);
+          Math.min(
+              0.95, resolved.rawAnchor().confidence() + Math.min(20, appSliceStatements) / 200.0);
 
       sendPoints.add(
           new SendPoint(
@@ -78,9 +79,11 @@ public final class Phase2DraftAnalyzer {
       resolvedRecvIds.add(resolved.rawAnchor().anchorId());
       NormalStatement seed = new NormalStatement(resolved.node(), resolved.instructionIndex());
       boolean useSlice = sdg != null && slicedRecvs < MAX_RECV_SLICE_SEEDS;
-      int appSliceStatements = useSlice ? countApplicationSliceStatements(seed, artifacts, sdg, false) : 0;
+      int appSliceStatements =
+          useSlice ? countApplicationSliceStatements(seed, artifacts, sdg, false) : 0;
       double beginConfidence =
-          Math.min(0.95, resolved.rawAnchor().confidence() + Math.min(20, appSliceStatements) / 200.0);
+          Math.min(
+              0.95, resolved.rawAnchor().confidence() + Math.min(20, appSliceStatements) / 200.0);
 
       String beginPointId = "recv-begin-" + resolved.rawAnchor().anchorId();
       recvBeginPoints.add(
@@ -190,9 +193,7 @@ public final class Phase2DraftAnalyzer {
       Statement seed, WalaArtifacts artifacts, SDG<?> sdg, boolean backward) {
     try {
       Collection<Statement> slice =
-          backward
-              ? Slicer.computeBackwardSlice(sdg, seed)
-              : Slicer.computeForwardSlice(sdg, seed);
+          backward ? Slicer.computeBackwardSlice(sdg, seed) : Slicer.computeForwardSlice(sdg, seed);
 
       int count = 0;
       for (Statement statement : slice) {

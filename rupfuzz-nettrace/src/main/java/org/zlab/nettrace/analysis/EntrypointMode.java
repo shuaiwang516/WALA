@@ -30,6 +30,8 @@ public enum EntrypointMode {
     }
 
     throw new IllegalArgumentException(
-        "Unsupported entrypoint mode: " + value + " (expected main|all-application|profile-seeded)");
+        "Unsupported entrypoint mode: "
+            + value
+            + " (expected main|all-application|profile-seeded)");
   }
 }

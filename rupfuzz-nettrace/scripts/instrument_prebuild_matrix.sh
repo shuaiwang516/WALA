@@ -196,6 +196,7 @@ public final class NetTraceRuntimeBridge {
             return null;
         }
         String nodeId = traceNodeId();
+        String nodeRole = traceNodeRole();
         String peer = detectPeer(message, contextArgs);
         String messageType = detectMessageType(message, contextArgs);
         String messageVersion = detectMessageVersion(message, contextArgs);
@@ -208,6 +209,7 @@ public final class NetTraceRuntimeBridge {
 
         setBuilderString(builder, "nodeId", nodeId);
         setBuilderString(builder, "peerId", peer);
+        setBuilderString(builder, "nodeRole", nodeRole);
         setBuilderString(builder, "channel", channel);
         setBuilderString(builder, "protocol", protocol);
         setBuilderString(builder, "messageType", messageType);
@@ -225,6 +227,7 @@ public final class NetTraceRuntimeBridge {
             return null;
         }
         String nodeId = traceNodeId();
+        String nodeRole = traceNodeRole();
         String peer = detectPeer(message, contextArgs);
         String messageType = detectMessageType(message, contextArgs);
         String messageVersion = detectMessageVersion(message, contextArgs);
@@ -235,6 +238,7 @@ public final class NetTraceRuntimeBridge {
 
         setBuilderString(builder, "nodeId", nodeId);
         setBuilderString(builder, "peerId", peer);
+        setBuilderString(builder, "nodeRole", nodeRole);
         setBuilderString(builder, "channel", channel);
         setBuilderString(builder, "protocol", protocol);
         setBuilderString(builder, "messageType", messageType);
@@ -302,17 +306,23 @@ public final class NetTraceRuntimeBridge {
         return "unknown";
     }
 
+    private static String traceNodeRole() {
+        return trimToNull(System.getenv("NET_TRACE_NODE_ROLE"));
+    }
+
     private static String detectPeer(Object message, Object[] contextArgs) {
         if (contextArgs == null) {
-            return stringFromAccessor(message, "getPeer", "peer", "getTo", "getAddress");
+            return stringFromAccessor(message, "getPeer", "peer", "getTo", "to",
+                    "getFrom", "from", "getAddress", "address");
         }
         for (Object arg : contextArgs) {
             if (arg == null) {
                 continue;
             }
-            String candidate = stringFromAccessor(arg, "getHostAddress", "getHostName",
-                    "getAddress", "address", "getRemoteAddress", "remoteAddress", "getPeer",
-                    "peer");
+            String candidate = stringFromAccessor(arg, "getHostAddress", "hostAddress",
+                    "getHostName", "hostName", "getAddress", "address",
+                    "getRemoteAddress", "remoteAddress", "getPeer", "peer",
+                    "getTo", "to", "getFrom", "from");
             if (candidate != null) {
                 return candidate;
             }
@@ -325,7 +335,8 @@ public final class NetTraceRuntimeBridge {
                 }
             }
         }
-        String fromMessage = stringFromAccessor(message, "getPeer", "peer", "getTo", "getAddress");
+        String fromMessage = stringFromAccessor(message, "getPeer", "peer", "getTo", "to",
+                "getFrom", "from", "getAddress", "address");
         if (fromMessage != null) {
             return fromMessage;
         }
@@ -487,19 +498,46 @@ public final class NetTraceRuntimeBridge {
         return 1;
     }
 
-    private static String stringFromAccessor(Object target, String... methodNames) {
-        if (target == null || methodNames == null) {
+    private static String stringFromAccessor(Object target, String... accessorNames) {
+        if (target == null || accessorNames == null) {
             return null;
         }
-        for (String methodName : methodNames) {
+        // Try zero-arg methods first
+        for (String name : accessorNames) {
             try {
-                Method method = target.getClass().getMethod(methodName);
+                Method method = target.getClass().getMethod(name);
                 Object value = method.invoke(target);
                 String text = valueToString(value);
                 if (text != null) {
                     return text;
                 }
             } catch (Throwable ignored) {
+            }
+        }
+        // Fall back to field probing (handles HDFS cases where peer info
+        // is stored in fields without public getter methods)
+        for (String name : accessorNames) {
+            try {
+                java.lang.reflect.Field field = findField(target.getClass(), name);
+                if (field != null) {
+                    field.setAccessible(true);
+                    Object value = field.get(target);
+                    String text = valueToString(value);
+                    if (text != null) {
+                        return text;
+                    }
+                }
+            } catch (Throwable ignored) {
+            }
+        }
+        return null;
+    }
+
+    private static java.lang.reflect.Field findField(Class<?> clazz, String name) {
+        for (Class<?> c = clazz; c != null && c != Object.class; c = c.getSuperclass()) {
+            try {
+                return c.getDeclaredField(name);
+            } catch (NoSuchFieldException ignored) {
             }
         }
         return null;
@@ -513,8 +551,20 @@ public final class NetTraceRuntimeBridge {
         if (value instanceof CharSequence || value instanceof Number
                 || value instanceof Boolean || value instanceof Enum<?>) {
             text = value.toString();
+        } else if (value instanceof java.net.InetSocketAddress) {
+            // Extract host/IP from socket address (e.g., HDFS ConnectionId.getAddress())
+            java.net.InetSocketAddress sa = (java.net.InetSocketAddress) value;
+            text = sa.getHostString();
+        } else if (value instanceof java.net.InetAddress) {
+            text = ((java.net.InetAddress) value).getHostAddress();
         } else {
-            text = value.getClass().getSimpleName();
+            String className = value.getClass().getName();
+            if (className.contains("InetAddress") || className.contains("Address")
+                    || className.contains("Endpoint")) {
+                text = value.toString();
+            } else {
+                text = null;
+            }
         }
         return trimToNull(text);
     }

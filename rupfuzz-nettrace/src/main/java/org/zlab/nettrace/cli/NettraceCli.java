@@ -1,6 +1,5 @@
 package org.zlab.nettrace.cli;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -62,7 +61,8 @@ public final class NettraceCli {
 
     try {
       AnalysisConfig initialConfig = toConfig(commandLine);
-      NettraceProfile profile = ProfileLoader.load(initialConfig.profile(), initialConfig.profilesDir());
+      NettraceProfile profile =
+          ProfileLoader.load(initialConfig.profile(), initialConfig.profilesDir());
       AnalysisConfig config = mergeProfileConfig(initialConfig, profile);
 
       Files.createDirectories(config.outputDir());
@@ -77,12 +77,15 @@ public final class NettraceCli {
 
       WalaArtifacts artifacts = new WalaAnalysisBuilder().build(config, profile, stats);
 
-      AnchorDiscoveryResult anchorResult = new AnchorDiscoverer().discover(artifacts, config, profile);
+      AnchorDiscoveryResult anchorResult =
+          new AnchorDiscoverer().discover(artifacts, config, profile);
       stats.rawSendAnchorCount = anchorResult.rawSendAnchors().size();
       stats.rawRecvAnchorCount = anchorResult.rawRecvAnchors().size();
 
-      JsonOutputWriter.write(config.outputDir().resolve("rawSendAnchors.json"), anchorResult.rawSendAnchors());
-      JsonOutputWriter.write(config.outputDir().resolve("rawRecvAnchors.json"), anchorResult.rawRecvAnchors());
+      JsonOutputWriter.write(
+          config.outputDir().resolve("rawSendAnchors.json"), anchorResult.rawSendAnchors());
+      JsonOutputWriter.write(
+          config.outputDir().resolve("rawRecvAnchors.json"), anchorResult.rawRecvAnchors());
       Files.writeString(
           config.outputDir().resolve("rawAnchorSchema.json"),
           RawAnchorSchema.JSON_SCHEMA,
@@ -98,10 +101,14 @@ public final class NettraceCli {
                     anchorResult.resolvedSendAnchors(),
                     anchorResult.resolvedRecvAnchors());
 
-        JsonOutputWriter.write(config.outputDir().resolve("netSendPoints.json"), phase2.sendPoints());
-        JsonOutputWriter.write(config.outputDir().resolve("netRecvBeginPoints.json"), phase2.recvBeginPoints());
-        JsonOutputWriter.write(config.outputDir().resolve("netRecvEndPoints.json"), phase2.recvEndPoints());
-        JsonOutputWriter.write(config.outputDir().resolve("netPhase2Diagnostics.json"), phase2.diagnostics());
+        JsonOutputWriter.write(
+            config.outputDir().resolve("netSendPoints.json"), phase2.sendPoints());
+        JsonOutputWriter.write(
+            config.outputDir().resolve("netRecvBeginPoints.json"), phase2.recvBeginPoints());
+        JsonOutputWriter.write(
+            config.outputDir().resolve("netRecvEndPoints.json"), phase2.recvEndPoints());
+        JsonOutputWriter.write(
+            config.outputDir().resolve("netPhase2Diagnostics.json"), phase2.diagnostics());
         stats.phase2ResolvedSendCount = phase2.diagnostics().resolvedSend();
         stats.phase2ResolvedRecvCount = phase2.diagnostics().resolvedRecv();
         stats.phase2FallbackSendCount = phase2.diagnostics().fallbackSend();
@@ -160,11 +167,7 @@ public final class NettraceCli {
             .desc("Exclude package prefix(es) from analysis scope")
             .build());
     options.addOption(
-        Option.builder()
-            .longOpt("exclusions-file")
-            .hasArg()
-            .desc("WALA exclusions file")
-            .build());
+        Option.builder().longOpt("exclusions-file").hasArg().desc("WALA exclusions file").build());
     options.addOption(
         Option.builder()
             .longOpt("output-dir")
@@ -190,11 +193,7 @@ public final class NettraceCli {
             .desc("Entrypoint mode: main|all-application|profile-seeded")
             .build());
     options.addOption(
-        Option.builder()
-            .longOpt("profile")
-            .hasArg()
-            .desc("Profile name or YAML path")
-            .build());
+        Option.builder().longOpt("profile").hasArg().desc("Profile name or YAML path").build());
     options.addOption(
         Option.builder()
             .longOpt("profiles-dir")
