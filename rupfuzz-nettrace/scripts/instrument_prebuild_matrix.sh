@@ -102,6 +102,17 @@ write_bridge() {
   #       "org.apache.hadoop.hbase.", "org.apache.hadoop.ipc.",
   #       "org.apache.hadoop.hdfs."). Keep this list in sync with the
   #       systems supported by run_validation_matrix.sh.
+  #
+  # Phase 1 (2026-04-19) added the classifier metadata triple: \`rpcService\`,
+  # \`rpcMethod\`, \`messageKind\`. Extraction is message-first, then a
+  # MethodDescriptor descent for protobuf-based RPCs (HBase
+  # \`com.google.protobuf.Descriptors\$MethodDescriptor\` and
+  # \`com.google.protobuf.Descriptors\$ServiceDescriptor\`), then
+  # contextArgs, then a structural fallback through the same accessor
+  # list. The Cassandra bridge typically leaves rpcService / rpcMethod
+  # null because Cassandra internode verbs are already carried by
+  # \`messageType\`; HBase and HDFS populate the triple from their
+  # MethodDescriptor / Call objects.
   cat > "$out_file" <<EOF
 package $package_name;
 
@@ -256,6 +267,9 @@ public final class NetTraceRuntimeBridge {
         String deliveryId = detectDeliveryId(message, contextArgs, logicalMessageId, peer);
         String channel = detectChannel(contextArgs);
         String protocol = detectProtocol(message, contextArgs);
+        String rpcService = detectRpcService(message, contextArgs);
+        String rpcMethod = detectRpcMethod(message, contextArgs);
+        String messageKind = detectMessageKind(message, contextArgs);
         String fanoutType = detectFanoutType(contextArgs);
         int targetCount = detectTargetCount(contextArgs);
 
@@ -266,6 +280,9 @@ public final class NetTraceRuntimeBridge {
         setBuilderString(builder, "protocol", protocol);
         setBuilderString(builder, "messageType", messageType);
         setBuilderString(builder, "messageVersion", messageVersion);
+        setBuilderString(builder, "rpcService", rpcService);
+        setBuilderString(builder, "rpcMethod", rpcMethod);
+        setBuilderString(builder, "messageKind", messageKind);
         setBuilderString(builder, "logicalMessageId", logicalMessageId);
         setBuilderString(builder, "deliveryId", deliveryId);
         setBuilderString(builder, "fanoutType", fanoutType);
@@ -287,6 +304,9 @@ public final class NetTraceRuntimeBridge {
         String deliveryId = detectDeliveryId(message, contextArgs, logicalMessageId, peer);
         String channel = detectChannel(contextArgs);
         String protocol = detectProtocol(message, contextArgs);
+        String rpcService = detectRpcService(message, contextArgs);
+        String rpcMethod = detectRpcMethod(message, contextArgs);
+        String messageKind = detectMessageKind(message, contextArgs);
 
         setBuilderString(builder, "nodeId", nodeId);
         setBuilderString(builder, "peerId", peer);
@@ -295,6 +315,9 @@ public final class NetTraceRuntimeBridge {
         setBuilderString(builder, "protocol", protocol);
         setBuilderString(builder, "messageType", messageType);
         setBuilderString(builder, "messageVersion", messageVersion);
+        setBuilderString(builder, "rpcService", rpcService);
+        setBuilderString(builder, "rpcMethod", rpcMethod);
+        setBuilderString(builder, "messageKind", messageKind);
         setBuilderString(builder, "logicalMessageId", logicalMessageId);
         setBuilderString(builder, "deliveryId", deliveryId);
         return finishMetaBuilder(builder);
@@ -519,6 +542,150 @@ public final class NetTraceRuntimeBridge {
             }
         }
         return null;
+    }
+
+    private static String detectRpcService(Object message, Object[] contextArgs) {
+        String[] accessors = {"rpcService", "getRpcService", "serviceName", "getServiceName",
+                "protocolName", "getProtocolName", "declaringClassProtocolName",
+                "getDeclaringClassProtocolName"};
+        String fromMessage = stringFromAccessor(message, accessors);
+        if (fromMessage != null) {
+            return shortServiceName(fromMessage);
+        }
+        if (contextArgs != null) {
+            for (Object arg : contextArgs) {
+                String candidate = stringFromAccessor(arg, accessors);
+                if (candidate != null) {
+                    return shortServiceName(candidate);
+                }
+            }
+            for (Object arg : contextArgs) {
+                String candidate = rpcServiceFromMethodDescriptor(arg);
+                if (candidate != null) {
+                    return shortServiceName(candidate);
+                }
+            }
+        }
+        String candidate = rpcServiceFromMethodDescriptor(message);
+        return candidate == null ? null : shortServiceName(candidate);
+    }
+
+    private static String detectRpcMethod(Object message, Object[] contextArgs) {
+        String[] accessors = {"rpcMethod", "getRpcMethod", "methodName", "getMethodName",
+                "callName", "getCallName"};
+        String fromMessage = stringFromAccessor(message, accessors);
+        if (fromMessage != null) {
+            return fromMessage;
+        }
+        if (contextArgs != null) {
+            for (Object arg : contextArgs) {
+                String candidate = stringFromAccessor(arg, accessors);
+                if (candidate != null) {
+                    return candidate;
+                }
+            }
+            for (Object arg : contextArgs) {
+                String candidate = rpcMethodFromMethodDescriptor(arg);
+                if (candidate != null) {
+                    return candidate;
+                }
+            }
+        }
+        return rpcMethodFromMethodDescriptor(message);
+    }
+
+    private static String detectMessageKind(Object message, Object[] contextArgs) {
+        String[] accessors = {"messageKind", "getMessageKind", "mutateType", "getMutateType",
+                "subtype", "getSubtype", "subType", "getSubType", "opType", "getOpType",
+                "kind", "getKind"};
+        String fromMessage = stringFromAccessor(message, accessors);
+        if (fromMessage != null) {
+            return fromMessage;
+        }
+        if (contextArgs != null) {
+            for (Object arg : contextArgs) {
+                String candidate = stringFromAccessor(arg, accessors);
+                if (candidate != null) {
+                    return candidate;
+                }
+            }
+        }
+        return null;
+    }
+
+    private static String rpcServiceFromMethodDescriptor(Object target) {
+        Object descriptor = resolveMethodDescriptor(target);
+        if (descriptor == null) {
+            return null;
+        }
+        Object service = invokeZeroArg(descriptor, "getService", "getContainingService");
+        if (service != null) {
+            String name = stringFromAccessor(service, "getFullName", "getName");
+            if (name != null) {
+                return name;
+            }
+        }
+        return null;
+    }
+
+    private static String rpcMethodFromMethodDescriptor(Object target) {
+        Object descriptor = resolveMethodDescriptor(target);
+        if (descriptor == null) {
+            return null;
+        }
+        return stringFromAccessor(descriptor, "getName", "name");
+    }
+
+    private static Object resolveMethodDescriptor(Object target) {
+        if (target == null) {
+            return null;
+        }
+        String className = target.getClass().getName();
+        if (className.contains("MethodDescriptor")) {
+            return target;
+        }
+        Object nested = invokeZeroArg(target, "getMethodDescriptor", "methodDescriptor",
+                "getMethod", "method");
+        if (nested == null) {
+            return null;
+        }
+        String nestedClass = nested.getClass().getName();
+        if (nestedClass.contains("MethodDescriptor")) {
+            return nested;
+        }
+        return null;
+    }
+
+    private static Object invokeZeroArg(Object target, String... methodNames) {
+        if (target == null || methodNames == null) {
+            return null;
+        }
+        for (String name : methodNames) {
+            try {
+                Method method = target.getClass().getMethod(name);
+                Object value = method.invoke(target);
+                if (value != null) {
+                    return value;
+                }
+            } catch (Throwable ignored) {
+            }
+        }
+        return null;
+    }
+
+    private static String shortServiceName(String name) {
+        if (name == null) {
+            return null;
+        }
+        int dot = name.lastIndexOf('.');
+        if (dot >= 0 && dot + 1 < name.length()) {
+            return name.substring(dot + 1);
+        }
+        int dollar = name.lastIndexOf('\$');
+        if (dollar >= 0 && dollar + 1 < name.length()) {
+            return name.substring(dollar + 1);
+        }
+        return name;
     }
 
     private static String detectFanoutType(Object[] contextArgs) {
