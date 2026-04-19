@@ -56,6 +56,52 @@ write_bridge() {
   local package_name="$1"
   local out_file="$2"
   mkdir -p "$(dirname "$out_file")"
+  # Phase 0 (2026-04-19) bridge invariants.
+  #
+  # The bridge file emitted below is a pure *artifact* of this generator —
+  # do not hand-edit the generated NetTraceRuntimeBridge.java trees.
+  # Validation and extraction precedence are expressed here so every
+  # system gets the same accessor-search contract.
+  #
+  # Extraction precedence for SendMeta / RecvMeta fields is message-first,
+  # then contextArgs, then a structural fallback. The \`stringFromAccessor\`
+  # helper tries zero-arg methods on \`target\` and, only if none return a
+  # usable value, falls back to reflective field probing (Phase 0 keeps the
+  # field fallback because HDFS \`RpcRequestWrapper\` stores request ids in
+  # private fields). Order of accessor names within each helper is the
+  # precedence — higher-specificity accessors come first.
+  #
+  # Per-system expectations (Phase 0):
+  #   peerId:
+  #     - Cassandra 3.x: MessageOut.to -> InetAddress (getHostAddress)
+  #     - Cassandra 4.x/5.x: InetAddressAndPort on the \`to\` argument
+  #       (getHostAddress/getHostName)
+  #     - HDFS: ConnectionId.getAddress -> InetSocketAddress
+  #       (getHostName/getHostAddress)
+  #     - HBase: ServerName.getHostname / getAddress on the target
+  #       descriptor passed into AbstractRpcClient.callMethod
+  #     The executor's TopologyNormalizer also registers the
+  #     \`<executorID>-N<idx>\` form from NET_TRACE_NODE_ID so the
+  #     server can still resolve endpoints that surface as raw
+  #     hostnames rather than role-specific strings.
+  #   logicalMessageId:
+  #     - Cassandra 3.x: MessageOut.getId / payload.id for streaming
+  #     - Cassandra 4.x/5.x: Message.id() accessor
+  #     - HDFS: Call.getId / RpcRequestWrapper.requestId
+  #     - HBase: Call.id / callId
+  #   deliveryId:
+  #     - Falls back to logicalMessageId\\@peer when the wire protocol
+  #       does not expose a distinct delivery token (typical for
+  #       Cassandra and HDFS). HBase exposes a stable callId, which is
+  #       preferred over the fallback.
+  #   channel / protocol:
+  #     - channel: derived from the class-name contains-test against
+  #       {ConnectionType, Channel, Connection}. Narrow deliberately:
+  #       a broader match absorbed gossip timers on Cassandra 3.x.
+  #     - protocol: classname prefix check ("org.apache.cassandra.",
+  #       "org.apache.hadoop.hbase.", "org.apache.hadoop.ipc.",
+  #       "org.apache.hadoop.hdfs."). Keep this list in sync with the
+  #       systems supported by run_validation_matrix.sh.
   cat > "$out_file" <<EOF
 package $package_name;
 
@@ -65,6 +111,12 @@ import java.util.Collection;
 
 /**
  * Reflection bridge so target builds stay decoupled from optional net-trace runtime classes.
+ *
+ * <p>Phase 0 invariants — do not edit this generated file by hand; see
+ * {@code nettrace-shuai/rupfuzz-nettrace/scripts/instrument_prebuild_matrix.sh}
+ * for the authoritative accessor precedence for each system (Cassandra /
+ * HDFS / HBase). Extraction order is message-first, then
+ * {@code contextArgs}, then reflective field probing (HDFS-specific).
  */
 public final class NetTraceRuntimeBridge {
     private static final Object[] EMPTY_CONTEXT = new Object[0];
