@@ -88,12 +88,40 @@ write_bridge() {
   #     - Cassandra 3.x: MessageOut.getId / payload.id for streaming
   #     - Cassandra 4.x/5.x: Message.id() accessor
   #     - HDFS: Call.getId / RpcRequestWrapper.requestId
-  #     - HBase: Call.id / callId
+  #     - HBase: Call.id / callId, plus Scan.scannerId (and
+  #       ScanRequest.scannerId / ScanResponse.scannerId) for
+  #       long-running scanner flows.
+  #     Phase 2 (2026-04-19) extends this accessor set with
+  #     \`callId\` / \`getCallId\` (HBase Call objects) and
+  #     \`scannerId\` / \`getScannerId\` (HBase scan traffic) so the
+  #     logical-flow extractor can keep a multi-RPC scan inside one
+  #     flow. The accessor order stays highest-specificity-first, so
+  #     callers that already expose \`id\` / \`getId\` are unaffected.
   #   deliveryId:
   #     - Falls back to logicalMessageId\\@peer when the wire protocol
   #       does not expose a distinct delivery token (typical for
   #       Cassandra and HDFS). HBase exposes a stable callId, which is
   #       preferred over the fallback.
+  #     - NOTE (Phase 2): the synthesized \`logicalId@peer\` alias is
+  #       peer-decorated and per-side, so it diverges across the SEND
+  #       and RECV of the same logical exchange. The upstream logical-
+  #       flow extractor detects the \`@\` decoration and demotes this
+  #       synthesized value to the deterministic fallback tier. Bridges
+  #       that can surface a native delivery / request identifier
+  #       (HBase callId, HDFS RpcRequestWrapper.requestId) should keep
+  #       doing so — the native value outranks the synthesized alias.
+  #   Scope summary (Phase 2):
+  #     - Request-scoped: id / messageId / callId / requestId /
+  #       streamId / sessionId / scannerId / tracingId. These are the
+  #       preferred correlation keys because the same value appears on
+  #       both sides of a request/response pair.
+  #     - Delivery-scoped: native deliveryId / getDeliveryId. Currently
+  #       only HBase exposes a distinct delivery token; every other
+  #       system falls back through the synthesized alias path.
+  #     - Synthesized aliases: logicalId@peer. Only emitted when no
+  #       request-level or native delivery-level identifier is
+  #       available, and explicitly demoted to fallback at
+  #       cross-lane comparison time.
   #   channel / protocol:
   #     - channel: derived from the class-name contains-test against
   #       {ConnectionType, Channel, Connection}. Narrow deliberately:
@@ -454,16 +482,41 @@ public final class NetTraceRuntimeBridge {
     }
 
     private static String detectLogicalMessageId(Object message, Object[] contextArgs) {
-        String fromMessage = stringFromAccessor(message, "id", "getId", "messageId",
-                "getMessageId", "streamId", "getStreamId", "sessionId", "getSessionId",
+        // Phase 2 accessor order:
+        //   1. scannerId / getScannerId first — HBase scan traffic
+        //      threads the same scannerId through many sequential RPCs
+        //      (OpenScanner -> ScanRequest -> ScanResponse -> CloseScanner).
+        //      Each of those RPCs also has a per-RPC Call.id / ScanRequest.id,
+        //      but those split a single logical scan into many flows.
+        //      Preferring scannerId when present keeps one scan in one
+        //      flow; when absent (non-scan RPCs), we fall through to the
+        //      request-level identifier below.
+        //   2. streamId / sessionId — same rationale for other
+        //      long-running exchanges (Cassandra repair / streaming
+        //      plans, HBase coprocessor sessions).
+        //   3. Request / call / generic id fallbacks — id, getId,
+        //      messageId, callId, requestId. Applies to the common
+        //      single-shot RPC case (HDFS Client.call, HBase Mutate,
+        //      Cassandra internode verbs).
+        //   4. tracingId last-resort — present on some Cassandra traced
+        //      requests; rare in the current workloads.
+        // Order matters: stringFromAccessor returns the first non-null
+        // match, so every per-system accessor the plan mentions is
+        // covered by walking this list top-down.
+        String fromMessage = stringFromAccessor(message, "scannerId", "getScannerId",
+                "streamId", "getStreamId", "sessionId", "getSessionId",
+                "id", "getId", "messageId", "getMessageId",
+                "callId", "getCallId", "requestId", "getRequestId",
                 "tracingId", "getTracingId");
         if (fromMessage != null) {
             return fromMessage;
         }
         if (contextArgs != null) {
             for (Object arg : contextArgs) {
-                String candidate = stringFromAccessor(arg, "id", "getId", "messageId", "getMessageId",
-                        "streamId", "getStreamId", "sessionId", "getSessionId");
+                String candidate = stringFromAccessor(arg, "scannerId", "getScannerId",
+                        "streamId", "getStreamId", "sessionId", "getSessionId",
+                        "id", "getId", "messageId", "getMessageId",
+                        "callId", "getCallId", "requestId", "getRequestId");
                 if (candidate != null) {
                     return candidate;
                 }
